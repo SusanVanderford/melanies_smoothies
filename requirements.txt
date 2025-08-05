@@ -4,3 +4,4 @@ snowflake-connector-python
 streamlit==1.31.1
 requests
 pandas
+
