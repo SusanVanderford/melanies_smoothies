@@ -1,4 +1,6 @@
 name: app_environment
+pip install snowflake-connector-python==3.11.0
+pip install snowflake-snowpark-python==1.9.0
 channels:
   - snowflake
 dependencies:
