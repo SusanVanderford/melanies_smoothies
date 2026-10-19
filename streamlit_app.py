@@ -41,7 +41,6 @@ my_dataframe = (
     .select(col("FRUIT_NAME"))
 )
 
-# Convert Snowflake rows into a Python list
 fruit_options = [
     row["FRUIT_NAME"]
     for row in my_dataframe.collect()
@@ -71,9 +70,7 @@ fruit_api_names = {
     "Oranges": "orange",
     "Raspberries": "raspberry",
     "Strawberries": "strawberry",
-    "Watermelon": "watermelon", 
-    "Cantaloupe": "cantaloupe", 
-    "Dragon Fruit": "dragon fruit"
+    "Watermelon": "watermelon"
 }
 
 
@@ -85,17 +82,17 @@ if ingredients_list:
 
     st.subheader("Fruit Nutritional Information")
 
+    # Store all API responses here
+    nutrition_data = []
+
     for fruit_chosen in ingredients_list:
 
-        # Look for the correct API name.
-        # If no mapping exists, use the lowercase Snowflake fruit name.
         fruit_for_url = fruit_api_names.get(
             fruit_chosen,
             fruit_chosen.lower()
         )
 
         try:
-
             smoothiefroot_response = requests.get(
                 f"https://my.smoothiefroot.com/api/fruit/{fruit_for_url}",
                 timeout=10
@@ -105,25 +102,34 @@ if ingredients_list:
 
             fruit_data = smoothiefroot_response.json()
 
-            st.write(f"### {fruit_chosen}")
+            # Add the selected fruit name
+            fruit_data["Fruit"] = fruit_chosen
 
-            st.dataframe(
-                [fruit_data],
-                use_container_width=True
-            )
+            # Add this fruit to our combined list
+            nutrition_data.append(fruit_data)
 
         except requests.exceptions.RequestException as error:
-
             st.warning(
                 f"Nutrition information could not be retrieved "
                 f"for {fruit_chosen}: {error}"
             )
 
         except ValueError:
-
             st.warning(
                 f"The API did not return valid JSON for {fruit_chosen}."
             )
+
+
+    # -----------------------------------------------------
+    # Display ONE table containing all selected fruits
+    # -----------------------------------------------------
+
+    if nutrition_data:
+
+        st.dataframe(
+            nutrition_data,
+            use_container_width=True
+        )
 
 
 # ---------------------------------------------------------
@@ -135,12 +141,10 @@ time_to_insert = st.button("Submit Order")
 
 if time_to_insert:
 
-    # Make sure a name was entered
     if not name_on_order.strip():
 
         st.warning("Please enter a name for the Smoothie.")
 
-    # Make sure at least one fruit was selected
     elif not ingredients_list:
 
         st.warning("Please choose at least one fruit.")
