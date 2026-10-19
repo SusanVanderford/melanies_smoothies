@@ -78,11 +78,15 @@ fruit_api_names = {
 # Get nutritional information for selected fruits
 # ---------------------------------------------------------
 
+# ---------------------------------------------------------
+# Get nutritional information for selected fruits
+# ---------------------------------------------------------
+
 if ingredients_list:
 
     st.subheader("Fruit Nutritional Information")
 
-    # Store all API responses here
+    # Store all fruit nutrition information here
     nutrition_data = []
 
     for fruit_chosen in ingredients_list:
@@ -102,11 +106,17 @@ if ingredients_list:
 
             fruit_data = smoothiefroot_response.json()
 
-            # Add the selected fruit name
-            fruit_data["Fruit"] = fruit_chosen
+            # Get the nested nutrition information
+            nutrition = fruit_data.get("nutritions", {})
 
-            # Add this fruit to our combined list
-            nutrition_data.append(fruit_data)
+            # Create one row for this fruit
+            nutrition_data.append({
+                "Fruit": fruit_chosen,
+                "Carbohydrates": nutrition.get("carbohydrates"),
+                "Fat": nutrition.get("fat"),
+                "Protein": nutrition.get("protein"),
+                "Sugar": nutrition.get("sugar")
+            })
 
         except requests.exceptions.RequestException as error:
             st.warning(
@@ -119,6 +129,14 @@ if ingredients_list:
                 f"The API did not return valid JSON for {fruit_chosen}."
             )
 
+
+    # Display all nutrition information in ONE table
+    if nutrition_data:
+
+        st.dataframe(
+            nutrition_data,
+            use_container_width=True
+        )
 
     # -----------------------------------------------------
     # Display ONE table containing all selected fruits
