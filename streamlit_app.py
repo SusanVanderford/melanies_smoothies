@@ -71,7 +71,9 @@ fruit_api_names = {
     "Oranges": "orange",
     "Raspberries": "raspberry",
     "Strawberries": "strawberry",
-    "Watermelon": "watermelon"
+    "Watermelon": "watermelon", 
+    "Cantaloupe": "cantaloupe", 
+    "Dragon Fruit": "dragon fruit"
 }
 
 
