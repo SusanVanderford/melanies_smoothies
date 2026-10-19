@@ -52,29 +52,30 @@ if ingredients_list:
 
     for fruit_chosen in ingredients_list:
 
-        # Format the fruit name for use in the URL
-        fruit_for_url = quote(fruit_chosen.lower())
+    fruit_for_url = quote(fruit_chosen.lower().rstrip("s"))
 
-        try:
-            smoothiefroot_response = requests.get(
-                f"https://my.smoothiefroot.com/api/fruit/{fruit_for_url}",
-                timeout=10
-            )
+    try:
+        smoothiefroot_response = requests.get(
+            f"https://my.smoothiefroot.com/api/fruit/{fruit_for_url}",
+            timeout=10
+        )
 
-            smoothiefroot_response.raise_for_status()
-            fruit_data = smoothiefroot_response.json()
+        smoothiefroot_response.raise_for_status()
 
-            st.write(f"### {fruit_chosen}")
-            st.dataframe(
-                [fruit_data],
-                use_container_width=True
-            )
+        fruit_data = smoothiefroot_response.json()
 
-        except requests.exceptions.RequestException as error:
-            st.warning(
-                f"Nutrition information could not be retrieved "
-                f"for {fruit_chosen}: {error}"
-            )
+        st.write(f"### {fruit_chosen}")
+
+        st.dataframe(
+            [fruit_data],
+            use_container_width=True
+        )
+
+    except requests.exceptions.RequestException as error:
+        st.warning(
+            f"Nutrition information could not be retrieved "
+            f"for {fruit_chosen}: {error}"
+        )
 
         except ValueError:
             st.warning(
