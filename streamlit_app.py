@@ -160,18 +160,6 @@ if ingredients_list:
                 f"for {fruit_chosen}: {error}"
             )
 
-
-# ---------------------------------------------------------
-# Select fruits
-# ---------------------------------------------------------
-
-ingredients_list = st.multiselect(
-    "Choose up to 5 fruits:",
-    fruit_options,
-    max_selections=5
-)
-
-
 # ---------------------------------------------------------
 # Display nutritional information
 # ---------------------------------------------------------
