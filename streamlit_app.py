@@ -168,31 +168,23 @@ if ingredients_list:
 
     for fruit_chosen in ingredients_list:
 
-        # Retrieve SEARCH_ON using the selected FRUIT_NAME
-        search_on = fruit_search_lookup.get(fruit_chosen)
+        # Get SEARCH_ON value from the Pandas dataframe
+        search_on = pd_df.loc[
+            pd_df["FRUIT_NAME"] == fruit_chosen,
+            "SEARCH_ON"
+        ].iloc[0]
 
-        if not search_on:
-
-            st.warning(
-                f"No SEARCH_ON value has been configured for "
-                f"{fruit_chosen}."
-            )
-
-            # Skip this fruit and continue to the next selection
-            continue
-
-
-        # Make the SEARCH_ON value safe for use in the URL
-        fruit_for_url = quote(
-            str(search_on).strip().lower(),
-            safe=""
+        st.write(
+            "The search value for ",
+            fruit_chosen,
+            " is ",
+            search_on,
+            "."
         )
 
-
         try:
-
             smoothiefroot_response = requests.get(
-                f"https://my.smoothiefroot.com/api/fruit/{fruit_for_url}",
+                f"https://my.smoothiefroot.com/api/fruit/{search_on}",
                 timeout=10
             )
 
@@ -200,12 +192,8 @@ if ingredients_list:
 
             fruit_data = smoothiefroot_response.json()
 
-
-            # Get the nested nutrition information
             nutrition = fruit_data.get("nutritions", {})
 
-
-            # Build a separate set of rows for this fruit
             nutrition_data = [
                 {
                     "Nutrient": "Carbs",
@@ -245,8 +233,6 @@ if ingredients_list:
                 }
             ]
 
-
-            # Display a heading and table for this fruit
             st.subheader(
                 f"{fruit_chosen} Nutritional Information"
             )
@@ -266,24 +252,12 @@ if ingredients_list:
                 ]
             )
 
-
-        except requests.exceptions.HTTPError:
-
-            st.warning(
-                f"Nutrition information was not found for "
-                f"{fruit_chosen}. SEARCH_ON is currently "
-                f"set to '{search_on}'."
-            )
-
-
         except requests.exceptions.RequestException as error:
 
             st.warning(
                 f"Nutrition information could not be retrieved "
                 f"for {fruit_chosen}: {error}"
             )
-
-
         except ValueError:
 
             st.warning(
