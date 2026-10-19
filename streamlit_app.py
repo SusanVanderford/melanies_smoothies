@@ -161,14 +161,14 @@ if ingredients_list:
             )
 
 # ---------------------------------------------------------
-# Display nutritional information
+# Get nutritional information for selected fruits
 # ---------------------------------------------------------
 
 if ingredients_list:
 
     for fruit_chosen in ingredients_list:
 
-        # Get SEARCH_ON value from the Pandas dataframe
+        # Find SEARCH_ON value from pd_df
         search_on = pd_df.loc[
             pd_df["FRUIT_NAME"] == fruit_chosen,
             "SEARCH_ON"
@@ -192,8 +192,10 @@ if ingredients_list:
 
             fruit_data = smoothiefroot_response.json()
 
+            # Get nested nutrition data
             nutrition = fruit_data.get("nutritions", {})
 
+            # Build ONE table for this fruit
             nutrition_data = [
                 {
                     "Nutrient": "Carbs",
@@ -233,10 +235,12 @@ if ingredients_list:
                 }
             ]
 
+            # ONE heading for this fruit
             st.subheader(
                 f"{fruit_chosen} Nutritional Information"
             )
 
+            # ONE table for this fruit
             st.dataframe(
                 nutrition_data,
                 use_container_width=True,
@@ -253,18 +257,16 @@ if ingredients_list:
             )
 
         except requests.exceptions.RequestException as error:
-
             st.warning(
                 f"Nutrition information could not be retrieved "
                 f"for {fruit_chosen}: {error}"
             )
-        except ValueError:
 
+        except ValueError:
             st.warning(
                 f"The API did not return valid JSON for "
                 f"{fruit_chosen}."
             )
-
 
 # ---------------------------------------------------------
 # Submit the smoothie order
