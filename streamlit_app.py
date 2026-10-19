@@ -79,10 +79,6 @@ fruit_api_names = {
 
 if ingredients_list:
 
-    st.subheader("Fruit Nutritional Information")
-
-    nutrition_data = []
-
     for fruit_chosen in ingredients_list:
 
         fruit_for_url = fruit_api_names.get(
@@ -100,52 +96,67 @@ if ingredients_list:
 
             fruit_data = smoothiefroot_response.json()
 
-            # Get the nested nutrition information
+            # Get nested nutrition information
             nutrition = fruit_data.get("nutritions", {})
 
-            # Carbohydrates row
-            nutrition_data.append({
-                "Nutrient": "Carbs",
-                "Family": fruit_data.get("family"),
-                "Genus": fruit_data.get("genus"),
-                "ID": fruit_data.get("id"),
-                "Name": fruit_data.get("name"),
-                "Nutrition": nutrition.get("carbohydrates"),
-                "Order": fruit_data.get("order")
-            })
+            # Create nutrition rows for THIS fruit only
+            nutrition_data = [
+                {
+                    "Nutrient": "Carbs",
+                    "Family": fruit_data.get("family"),
+                    "Genus": fruit_data.get("genus"),
+                    "ID": fruit_data.get("id"),
+                    "Name": fruit_data.get("name"),
+                    "Nutrition": nutrition.get("carbohydrates"),
+                    "Order": fruit_data.get("order")
+                },
+                {
+                    "Nutrient": "Fat",
+                    "Family": fruit_data.get("family"),
+                    "Genus": fruit_data.get("genus"),
+                    "ID": fruit_data.get("id"),
+                    "Name": fruit_data.get("name"),
+                    "Nutrition": nutrition.get("fat"),
+                    "Order": fruit_data.get("order")
+                },
+                {
+                    "Nutrient": "Protein",
+                    "Family": fruit_data.get("family"),
+                    "Genus": fruit_data.get("genus"),
+                    "ID": fruit_data.get("id"),
+                    "Name": fruit_data.get("name"),
+                    "Nutrition": nutrition.get("protein"),
+                    "Order": fruit_data.get("order")
+                },
+                {
+                    "Nutrient": "Sugar",
+                    "Family": fruit_data.get("family"),
+                    "Genus": fruit_data.get("genus"),
+                    "ID": fruit_data.get("id"),
+                    "Name": fruit_data.get("name"),
+                    "Nutrition": nutrition.get("sugar"),
+                    "Order": fruit_data.get("order")
+                }
+            ]
 
-            # Fat row
-            nutrition_data.append({
-                "Nutrient": "Fat",
-                "Family": fruit_data.get("family"),
-                "Genus": fruit_data.get("genus"),
-                "ID": fruit_data.get("id"),
-                "Name": fruit_data.get("name"),
-                "Nutrition": nutrition.get("fat"),
-                "Order": fruit_data.get("order")
-            })
+            # Title for this fruit's table
+            st.subheader(f"{fruit_chosen} Nutritional Information")
 
-            # Protein row
-            nutrition_data.append({
-                "Nutrient": "Protein",
-                "Family": fruit_data.get("family"),
-                "Genus": fruit_data.get("genus"),
-                "ID": fruit_data.get("id"),
-                "Name": fruit_data.get("name"),
-                "Nutrition": nutrition.get("protein"),
-                "Order": fruit_data.get("order")
-            })
-
-            # Sugar row
-            nutrition_data.append({
-                "Nutrient": "Sugar",
-                "Family": fruit_data.get("family"),
-                "Genus": fruit_data.get("genus"),
-                "ID": fruit_data.get("id"),
-                "Name": fruit_data.get("name"),
-                "Nutrition": nutrition.get("sugar"),
-                "Order": fruit_data.get("order")
-            })
+            # Display this fruit's table
+            st.dataframe(
+                nutrition_data,
+                use_container_width=True,
+                hide_index=True,
+                column_order=[
+                    "Nutrient",
+                    "Family",
+                    "Genus",
+                    "ID",
+                    "Name",
+                    "Nutrition",
+                    "Order"
+                ]
+            )
 
         except requests.exceptions.RequestException as error:
             st.warning(
@@ -157,27 +168,6 @@ if ingredients_list:
             st.warning(
                 f"The API did not return valid JSON for {fruit_chosen}."
             )
-
-
-    # Display ONE combined table
-    if nutrition_data:
-
-        st.dataframe(
-            nutrition_data,
-            use_container_width=True,
-            hide_index=True,
-            column_order=[
-                "Nutrient",
-                "Family",
-                "Genus",
-                "ID",
-                "Name",
-                "Nutrition",
-                "Order"
-            ]
-        )
-
-
 # ---------------------------------------------------------
 # Submit order
 # ---------------------------------------------------------
