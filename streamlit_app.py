@@ -177,17 +177,6 @@ if ingredients_list:
             ]
         )
 
-    # -----------------------------------------------------
-    # Display ONE table containing all selected fruits
-    # -----------------------------------------------------
-
-    if nutrition_data:
-
-        st.dataframe(
-            nutrition_data,
-            use_container_width=True
-        )
-
 
 # ---------------------------------------------------------
 # Submit order
