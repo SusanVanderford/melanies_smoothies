@@ -285,7 +285,7 @@ if time_to_insert:
 
     else:
 
-        ingredients_string = " ".join(
+        ingredients_string = " ".join(ingredients_list) + " "
             ingredients_list
         )
 
