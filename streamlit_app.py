@@ -2,11 +2,12 @@
 import streamlit as st
 import requests
 
+from urllib.parse import quote
 from snowflake.snowpark.functions import col
 
 
 # ---------------------------------------------------------
-# Page title
+# Page heading
 # ---------------------------------------------------------
 
 st.title(":cup_with_straw: Customize Your Smoothie :cup_with_straw:")
@@ -33,18 +34,35 @@ if name_on_order:
 
 
 # ---------------------------------------------------------
-# Get available fruit options from Snowflake
+# Get fruit options from Snowflake
 # ---------------------------------------------------------
 
 my_dataframe = (
     session.table("SMOOTHIES.PUBLIC.FRUIT_OPTIONS")
-    .select(col("FRUIT_NAME"))
+    .select(
+        col("FRUIT_NAME"),
+        col("SEARCH_ON")
+    )
+    .sort(col("FRUIT_NAME"))
 )
 
+
+# Collect the Snowflake results once
+fruit_rows = my_dataframe.collect()
+
+
+# Values displayed in the multiselect
 fruit_options = [
     row["FRUIT_NAME"]
-    for row in my_dataframe.collect()
+    for row in fruit_rows
 ]
+
+
+# Lookup used to match FRUIT_NAME to SEARCH_ON
+fruit_search_lookup = {
+    row["FRUIT_NAME"]: row["SEARCH_ON"]
+    for row in fruit_rows
+}
 
 
 # ---------------------------------------------------------
@@ -59,34 +77,36 @@ ingredients_list = st.multiselect(
 
 
 # ---------------------------------------------------------
-# Map Snowflake fruit names to SmoothieFroot API names
-# ---------------------------------------------------------
-
-fruit_api_names = {
-    "Apples": "apple",
-    "Bananas": "banana",
-    "Blueberries": "blueberry",
-    "Elderberries": "elderberry",
-    "Oranges": "orange",
-    "Raspberries": "raspberry",
-    "Strawberries": "strawberry",
-    "Watermelon": "watermelon"
-}
-
-# ---------------------------------------------------------
-# Get nutritional information for selected fruits
+# Display nutritional information
 # ---------------------------------------------------------
 
 if ingredients_list:
 
     for fruit_chosen in ingredients_list:
 
-        fruit_for_url = fruit_api_names.get(
-            fruit_chosen,
-            fruit_chosen.lower()
+        # Retrieve SEARCH_ON using the selected FRUIT_NAME
+        search_on = fruit_search_lookup.get(fruit_chosen)
+
+        if not search_on:
+
+            st.warning(
+                f"No SEARCH_ON value has been configured for "
+                f"{fruit_chosen}."
+            )
+
+            # Skip this fruit and continue to the next selection
+            continue
+
+
+        # Make the SEARCH_ON value safe for use in the URL
+        fruit_for_url = quote(
+            str(search_on).strip().lower(),
+            safe=""
         )
 
+
         try:
+
             smoothiefroot_response = requests.get(
                 f"https://my.smoothiefroot.com/api/fruit/{fruit_for_url}",
                 timeout=10
@@ -96,10 +116,12 @@ if ingredients_list:
 
             fruit_data = smoothiefroot_response.json()
 
-            # Get nested nutrition information
+
+            # Get the nested nutrition information
             nutrition = fruit_data.get("nutritions", {})
 
-            # Create nutrition rows for THIS fruit only
+
+            # Build a separate set of rows for this fruit
             nutrition_data = [
                 {
                     "Nutrient": "Carbs",
@@ -139,10 +161,12 @@ if ingredients_list:
                 }
             ]
 
-            # Title for this fruit's table
-            st.subheader(f"{fruit_chosen} Nutritional Information")
 
-            # Display this fruit's table
+            # Display a heading and table for this fruit
+            st.subheader(
+                f"{fruit_chosen} Nutritional Information"
+            )
+
             st.dataframe(
                 nutrition_data,
                 use_container_width=True,
@@ -158,18 +182,34 @@ if ingredients_list:
                 ]
             )
 
+
+        except requests.exceptions.HTTPError:
+
+            st.warning(
+                f"Nutrition information was not found for "
+                f"{fruit_chosen}. SEARCH_ON is currently "
+                f"set to '{search_on}'."
+            )
+
+
         except requests.exceptions.RequestException as error:
+
             st.warning(
                 f"Nutrition information could not be retrieved "
                 f"for {fruit_chosen}: {error}"
             )
 
+
         except ValueError:
+
             st.warning(
-                f"The API did not return valid JSON for {fruit_chosen}."
+                f"The API did not return valid JSON for "
+                f"{fruit_chosen}."
             )
+
+
 # ---------------------------------------------------------
-# Submit order
+# Submit the smoothie order
 # ---------------------------------------------------------
 
 time_to_insert = st.button("Submit Order")
@@ -177,13 +217,17 @@ time_to_insert = st.button("Submit Order")
 
 if time_to_insert:
 
+    # Validate name
     if not name_on_order.strip():
 
         st.warning("Please enter a name for the Smoothie.")
 
+
+    # Validate fruit selection
     elif not ingredients_list:
 
         st.warning("Please choose at least one fruit.")
+
 
     else:
 
@@ -197,7 +241,10 @@ if time_to_insert:
 
         session.sql(
             my_insert_stmt,
-            params=[ingredients_string, name_on_order]
+            params=[
+                ingredients_string,
+                name_on_order.strip()
+            ]
         ).collect()
 
         st.success(
